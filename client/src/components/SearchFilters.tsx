@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 interface FilterParams {
   location: string;
   propertyType: string;
-  priceRange: [number, number];
+  priceRange: number[];
   bedrooms: string;
   bathrooms: string;
   amenities: string[];
@@ -100,7 +100,6 @@ export default function SearchFilters({ onFiltersChange, onClearFilters }: Searc
             <SelectValue placeholder="Select city" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Cities</SelectItem>
             {cities.map((city) => (
               <SelectItem key={city} value={city.toLowerCase()}>{city}</SelectItem>
             ))}
@@ -119,7 +118,6 @@ export default function SearchFilters({ onFiltersChange, onClearFilters }: Searc
             <SelectValue placeholder="Any type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any Type</SelectItem>
             <SelectItem value="apartment">Apartment</SelectItem>
             <SelectItem value="hostel">Student Hostel</SelectItem>
             <SelectItem value="hotel">Hotel</SelectItem>
@@ -137,7 +135,7 @@ export default function SearchFilters({ onFiltersChange, onClearFilters }: Searc
         <div className="px-2">
           <Slider
             value={filters.priceRange}
-            onValueChange={(value) => updateFilter("priceRange", value as [number, number])}
+            onValueChange={(value) => updateFilter("priceRange", value)}
             max={5000}
             min={0}
             step={100}
@@ -159,7 +157,6 @@ export default function SearchFilters({ onFiltersChange, onClearFilters }: Searc
             <SelectValue placeholder="Any" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any</SelectItem>
             <SelectItem value="1">1+</SelectItem>
             <SelectItem value="2">2+</SelectItem>
             <SelectItem value="3">3+</SelectItem>
@@ -176,7 +173,6 @@ export default function SearchFilters({ onFiltersChange, onClearFilters }: Searc
             <SelectValue placeholder="Any" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any</SelectItem>
             <SelectItem value="1">1+</SelectItem>
             <SelectItem value="2">2+</SelectItem>
             <SelectItem value="3">3+</SelectItem>

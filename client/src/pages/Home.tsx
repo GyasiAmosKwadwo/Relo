@@ -1,21 +1,21 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
+import SearchSection from "@/components/SearchSection";
 import PropertyCard from "@/components/PropertyCard";
 import SearchFilters from "@/components/SearchFilters";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Shield, Clock, Users, MapPin, Star, TrendingUp } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Search, Shield, Clock, Users, MapPin, Star, TrendingUp, Filter, Eye, MessageCircle, Phone, Calendar, CreditCard } from "lucide-react";
 import apartmentImage from "@assets/generated_images/Featured_apartment_interior_15574472.png";
 import hostelImage from "@assets/generated_images/Student_hostel_room_0c5d0447.png";
 import hotelImage from "@assets/generated_images/Hotel_room_showcase_869cb115.png";
 
 export default function Home() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [searchResults, setSearchResults] = useState<typeof mockFeaturedProperties>([]);
-  const [isSearchActive, setIsSearchActive] = useState(false);
-
   //todo: remove mock functionality
   const mockFeaturedProperties = [
     {
@@ -33,7 +33,7 @@ export default function Home() {
       isAvailable: true
     },
     {
-      id: "2", 
+      id: "2",
       title: "University of Ghana Hostel Bed",
       location: "Legon, Accra",
       price: 800,
@@ -43,12 +43,14 @@ export default function Home() {
       imageUrl: hostelImage,
       propertyType: "hostel" as const,
       amenities: ["wifi", "study_room", "cafeteria"],
+      bedrooms: 1,
+      bathrooms: 1,
       isAvailable: true
     },
     {
       id: "3",
       title: "Luxury Hotel Suite Downtown",
-      location: "Osu, Accra", 
+      location: "Osu, Accra",
       price: 350,
       period: "night",
       rating: 4.9,
@@ -71,6 +73,8 @@ export default function Home() {
       imageUrl: hostelImage,
       propertyType: "hostel" as const,
       amenities: ["wifi", "study_room"],
+      bedrooms: 1,
+      bathrooms: 1,
       isAvailable: true
     },
     {
@@ -98,17 +102,36 @@ export default function Home() {
       imageUrl: hotelImage,
       propertyType: "hotel" as const,
       amenities: ["wifi", "restaurant"],
+      bedrooms: 1,
+      bathrooms: 1,
       isAvailable: true
     }
   ];
+
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [searchResults, setSearchResults] = useState<typeof mockFeaturedProperties>([]);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [filteredProperties, setFilteredProperties] = useState(mockFeaturedProperties);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [browseDialogOpen, setBrowseDialogOpen] = useState(false);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [bookDialogOpen, setBookDialogOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  const [messageText, setMessageText] = useState("");
+  const [bookingDetails, setBookingDetails] = useState({
+    checkIn: "",
+    checkOut: "",
+    guests: "1",
+    specialRequests: ""
+  });
 
   const handleThemeToggle = () => {
     setIsDarkMode(!isDarkMode);
     document.documentElement.classList.toggle("dark");
   };
 
-  const handleHeroSearch = (params: any) => {
-    console.log("Hero search:", params);
+  const handleSearch = (params: any) => {
+    console.log("Search triggered:", params);
     setIsSearchActive(true);
     // In a real app, this would trigger an API call
     setSearchResults(mockFeaturedProperties.slice(0, 3));
@@ -116,7 +139,43 @@ export default function Home() {
 
   const handleFiltersChange = (filters: any) => {
     console.log("Filters changed:", filters);
-    // In a real app, this would filter the results
+    let filtered = [...mockFeaturedProperties];
+
+    // Filter by location
+    if (filters.location) {
+      filtered = filtered.filter(p => p.location.toLowerCase().includes(filters.location.toLowerCase()));
+    }
+
+    // Filter by property type
+    if (filters.propertyType) {
+      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
+    }
+
+    // Filter by price range
+    if (filters.priceRange && (filters.priceRange[0] > 0 || filters.priceRange[1] < 5000)) {
+      filtered = filtered.filter(p => p.price >= filters.priceRange[0] && p.price <= filters.priceRange[1]);
+    }
+
+    // Filter by bedrooms
+    if (filters.bedrooms) {
+      const minBed = parseInt(filters.bedrooms);
+      filtered = filtered.filter(p => p.bedrooms >= minBed);
+    }
+
+    // Filter by bathrooms
+    if (filters.bathrooms) {
+      const minBath = parseInt(filters.bathrooms);
+      filtered = filtered.filter(p => p.bathrooms >= minBath);
+    }
+
+    // Filter by amenities
+    if (filters.amenities && filters.amenities.length > 0) {
+      filtered = filtered.filter(p =>
+        filters.amenities.some((amenity: string) => p.amenities.includes(amenity.toLowerCase()))
+      );
+    }
+
+    setFilteredProperties(filtered);
   };
 
   const handlePropertyClick = (id: string) => {
@@ -128,9 +187,47 @@ export default function Home() {
     console.log("Property favorited:", id);
   };
 
+  const handleBrowse = (id: string) => {
+    const property = mockFeaturedProperties.find(p => p.id === id);
+    if (property) {
+      setSelectedProperty(property);
+      setBrowseDialogOpen(true);
+    }
+  };
+
+  const handleBookNow = (id: string) => {
+    const property = mockFeaturedProperties.find(p => p.id === id);
+    if (property) {
+      setSelectedProperty(property);
+      setBookDialogOpen(true);
+    }
+  };
+
+  const handleMessage = (id: string) => {
+    const property = mockFeaturedProperties.find(p => p.id === id);
+    if (property) {
+      setSelectedProperty(property);
+      setMessageDialogOpen(true);
+    }
+  };
+
+  const handleSendMessage = () => {
+    console.log("Sending message:", messageText, "to property:", selectedProperty?.id);
+    setMessageText("");
+    setMessageDialogOpen(false);
+    setSelectedProperty(null);
+  };
+
+  const handleBookingSubmit = () => {
+    console.log("Booking submitted:", bookingDetails, "for property:", selectedProperty?.id);
+    setBookingDetails({ checkIn: "", checkOut: "", guests: "1", specialRequests: "" });
+    setBookDialogOpen(false);
+    setSelectedProperty(null);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header 
+      <Header
         onSearch={(query) => console.log("Header search:", query)}
         onThemeToggle={handleThemeToggle}
         isDarkMode={isDarkMode}
@@ -138,7 +235,10 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <HeroSection onSearch={handleHeroSearch} />
+        <HeroSection />
+
+        {/* Search Section */}
+        <SearchSection onSearch={handleSearch} />
 
         {/* How It Works Section */}
         <section className="py-16 bg-muted/50">
@@ -192,25 +292,79 @@ export default function Home() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-3xl font-heading font-bold mb-2">
-                  Featured Properties
+                  Featured Properties ({filteredProperties.length} properties)
                 </h2>
                 <p className="text-muted-foreground">
                   Discover handpicked accommodations across Ghana
                 </p>
               </div>
-              <Button variant="outline" data-testid="button-view-all">
-                View All Properties
-              </Button>
+              <div className="flex gap-2">
+                <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <Filter className="h-4 w-4" />
+                      Filters
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Filter Properties</DialogTitle>
+                    </DialogHeader>
+                    <SearchFilters
+                      onFiltersChange={(filters) => {
+                        handleFiltersChange(filters);
+                        setIsFilterOpen(false);
+                      }}
+                      onClearFilters={() => {
+                        setFilteredProperties(mockFeaturedProperties);
+                        setIsFilterOpen(false);
+                      }}
+                    />
+                  </DialogContent>
+                </Dialog>
+                <Button variant="outline" data-testid="button-view-all">
+                  View All Properties
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockFeaturedProperties.slice(0, 6).map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  {...property}
-                  onFavorite={handlePropertyFavorite}
-                  onClick={handlePropertyClick}
-                />
+              {filteredProperties.map((property) => (
+                <div key={property.id} className="relative group">
+                  <PropertyCard
+                    {...property}
+                    onFavorite={handlePropertyFavorite}
+                    onClick={handlePropertyClick}
+                  />
+                  {/* Action buttons overlay */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 rounded-xl">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleBrowse(property.id)}
+                      className="flex items-center gap-1"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Browse
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleBookNow(property.id)}
+                      className="flex items-center gap-1"
+                    >
+                      Book Now
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleMessage(property.id)}
+                      className="flex items-center gap-1"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Message
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -222,7 +376,7 @@ export default function Home() {
             <div className="container mx-auto px-4">
               <div className="flex gap-8">
                 <div className="w-80 shrink-0">
-                  <SearchFilters 
+                  <SearchFilters
                     onFiltersChange={handleFiltersChange}
                     onClearFilters={() => console.log("Filters cleared")}
                   />
@@ -357,6 +511,163 @@ export default function Home() {
       </main>
 
       <Footer />
+
+      {/* Browse Dialog */}
+      <Dialog open={browseDialogOpen} onOpenChange={setBrowseDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Property Details</DialogTitle>
+          </DialogHeader>
+          {selectedProperty && (
+            <div className="space-y-6">
+              <div className="aspect-video rounded-lg overflow-hidden">
+                <img
+                  src={selectedProperty.imageUrl}
+                  alt={selectedProperty.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-2xl font-bold">{selectedProperty.title}</h3>
+                  <p className="text-muted-foreground flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    {selectedProperty.location}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="font-semibold">{selectedProperty.rating}</span>
+                    <span className="text-muted-foreground">({selectedProperty.reviewCount} reviews)</span>
+                  </div>
+                  <div className="text-2xl font-bold text-primary">
+                    ₵{selectedProperty.price}{selectedProperty.period ? `/${selectedProperty.period}` : '/month'}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="font-semibold">Bedrooms:</span> {selectedProperty.bedrooms}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Bathrooms:</span> {selectedProperty.bathrooms}
+                  </div>
+                </div>
+                <div>
+                  <span className="font-semibold">Amenities:</span>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedProperty.amenities.map((amenity: string) => (
+                      <span key={amenity} className="px-2 py-1 bg-primary/10 rounded-full text-sm">
+                        {amenity}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={() => handleBookNow(selectedProperty.id)} className="flex-1">
+                  Book Now
+                </Button>
+                <Button variant="outline" onClick={() => handleMessage(selectedProperty.id)}>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Message Owner
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Message Dialog */}
+      <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Message Property Owner</DialogTitle>
+          </DialogHeader>
+          {selectedProperty && (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                Send a message to the owner of <strong>{selectedProperty.title}</strong>
+              </div>
+              <Textarea
+                placeholder="Type your message here..."
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                rows={4}
+              />
+              <div className="flex gap-2">
+                <Button onClick={handleSendMessage} disabled={!messageText.trim()}>
+                  Send Message
+                </Button>
+                <Button variant="outline" onClick={() => setMessageDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Book Dialog */}
+      <Dialog open={bookDialogOpen} onOpenChange={setBookDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Book Property</DialogTitle>
+          </DialogHeader>
+          {selectedProperty && (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                Booking <strong>{selectedProperty.title}</strong>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Check-in Date</label>
+                  <Input
+                    type="date"
+                    value={bookingDetails.checkIn}
+                    onChange={(e) => setBookingDetails(prev => ({ ...prev, checkIn: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Check-out Date</label>
+                  <Input
+                    type="date"
+                    value={bookingDetails.checkOut}
+                    onChange={(e) => setBookingDetails(prev => ({ ...prev, checkOut: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Number of Guests</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={bookingDetails.guests}
+                    onChange={(e) => setBookingDetails(prev => ({ ...prev, guests: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Special Requests</label>
+                  <Textarea
+                    placeholder="Any special requests..."
+                    value={bookingDetails.specialRequests}
+                    onChange={(e) => setBookingDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleBookingSubmit} className="flex-1">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Confirm Booking
+                </Button>
+                <Button variant="outline" onClick={() => setBookDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
