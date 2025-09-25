@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Search, Menu, X, Home, Building, MessageSquare, User, Moon, Sun } from "lucide-react";
+import { Link } from "wouter";
+import { Search, Menu, X, Home, User, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -54,28 +55,30 @@ export default function Header({ onSearch, onMenuToggle, isDarkMode, onThemeTogg
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" data-testid="button-browse">
-              <Building className="h-4 w-4 mr-2" />
-              Browse
-            </Button>
-            <Button variant="ghost" size="sm" data-testid="button-messages">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Messages
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Link href="/profile">
+              <Button variant="ghost" size="sm" data-testid="button-profile">
+                <User className="h-4 w-4 mr-2" />
+                Profile
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onThemeToggle}
               data-testid="button-theme-toggle"
             >
               {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <Button variant="outline" size="sm" data-testid="button-login">
-              Login
-            </Button>
-            <Button size="sm" data-testid="button-signup">
-              Sign Up
-            </Button>
+            <Link href="/login">
+              <Button variant="outline" size="sm" data-testid="button-login">
+                Login
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button size="sm" data-testid="button-signup">
+                Sign Up
+              </Button>
+            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -109,24 +112,20 @@ export default function Header({ onSearch, onMenuToggle, isDarkMode, onThemeTogg
               </form>
               <div className="flex flex-col space-y-2 px-2">
                 <Button variant="ghost" className="justify-start">
-                  <Building className="h-4 w-4 mr-2" />
-                  Browse Properties
-                </Button>
-                <Button variant="ghost" className="justify-start">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Messages
-                </Button>
-                <Button variant="ghost" className="justify-start">
                   <User className="h-4 w-4 mr-2" />
                   Profile
                 </Button>
                 <div className="flex space-x-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    Login
-                  </Button>
-                  <Button size="sm" className="flex-1">
-                    Sign Up
-                  </Button>
+                  <Link href="/login">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button size="sm" className="flex-1">
+                      Sign Up
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>
